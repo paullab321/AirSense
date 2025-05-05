@@ -19,8 +19,8 @@ def read_sds011():
                 pm25 = struct.unpack('<H', data[2:4])[0] / 10.0
                 pm10 = struct.unpack('<H', data[4:6])[0] / 10.0
 
-                # Print the values
-                print(f"{datetime.now()} - PM2.5: {pm25} µg/m³, PM10: {pm10} µg/m³")
+                # Yield the values as a dictionary
+                yield {"timestamp": datetime.now(), "pm2.5": pm25, "pm10": pm10}
 
             # Wait 1 second before the next reading
             time.sleep(1)
