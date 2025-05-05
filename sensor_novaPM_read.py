@@ -1,6 +1,7 @@
 import serial
 import struct
 import time
+from datetime import datetime
 
 
 def read_sds011():
@@ -19,7 +20,7 @@ def read_sds011():
                 pm10 = struct.unpack('<H', data[4:6])[0] / 10.0
 
                 # Print the values
-                print(f"PM2.5: {pm25} µg/m³, PM10: {pm10} µg/m³")
+                print(f"{datetime.now()} - PM2.5: {pm25} µg/m³, PM10: {pm10} µg/m³")
 
             # Wait 1 second before the next reading
             time.sleep(1)
