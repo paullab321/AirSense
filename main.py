@@ -1,9 +1,9 @@
-import sensor_bme280_read  # Replace with the actual module and class name
+import sensor_novaPM_read  # Replace with the actual module and class name
 
 
 def main():
 
-    sensor_bme280_read.read_sds011()
+    sensor_novaPM_read.read_sds011()
 
 
 def process_sensor_data(data):
