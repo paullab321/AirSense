@@ -28,7 +28,3 @@ def read_sds011():
         print("Exiting...")
     finally:
         ser.close()
-
-
-if __name__ == "__main__":
-    read_sds011()
