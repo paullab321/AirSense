@@ -7,38 +7,38 @@ def plot_sensor_data(data_source):
     Plots PM2.5, PM10, temperature, humidity, and pressure data in real-time.
     :param data_source: A generator function that yields sensor data.
     """
-    indices = []  # X-axis will be indices (1, 2, 3, ...)
-    pm25_values = []
-    pm10_values = []
-    temperature_values = []
-    humidity_values = []
-    pressure_values = []
+    pm25_values, pm10_values, pm_indices = [], [], []
+    temperature_values, temp_indices = [], []
+    # (You can add humidity/pressure similarly if you want to plot them)
 
     def update(frame):
         try:
             data = next(data_source, None)
             if data:
                 print(f"Received data: {data}")  # Debug: Print received data
-                indices.append(len(indices) + 1)
                 if "pm2.5" in data and "pm10" in data:
+                    pm_indices.append(len(pm_indices) + 1)
                     pm25_values.append(data["pm2.5"])
                     pm10_values.append(data["pm10"])
                 if "temperature" in data and "humidity" in data and "pressure" in data:
+                    temp_indices.append(len(temp_indices) + 1)
                     temperature_values.append(data["temperature"])
-                    humidity_values.append(data["humidity"])
-                    pressure_values.append(data["pressure"])
+                    # humidity_values.append(data["humidity"])
+                    # pressure_values.append(data["pressure"])
 
-                # Clear and redraw the plots
                 ax1.clear()
                 ax2.clear()
                 ax3.clear()
 
-                ax1.plot(indices, pm25_values,
-                         label="PM2.5 (µg/m³)", color="blue")
-                ax2.plot(indices, pm10_values,
-                         label="PM10 (µg/m³)", color="red")
-                ax3.plot(indices, temperature_values,
-                         label="Temperature (°C)", color="green")
+                if pm25_values:
+                    ax1.plot(pm_indices, pm25_values,
+                             label="PM2.5 (µg/m³)", color="blue")
+                if pm10_values:
+                    ax2.plot(pm_indices, pm10_values,
+                             label="PM10 (µg/m³)", color="red")
+                if temperature_values:
+                    ax3.plot(temp_indices, temperature_values,
+                             label="Temperature (°C)", color="green")
 
                 ax1.set_title("PM2.5 Concentration")
                 ax2.set_title("PM10 Concentration")
