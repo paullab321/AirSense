@@ -48,6 +48,6 @@ def plot_sensor_data(data_source):
             ax3.legend()
 
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 12))
-    ani = FuncAnimation(fig, update, interval=1000)
+    ani = FuncAnimation(fig, update, interval=1000, save_count=100)
     plt.tight_layout()
     plt.show()
