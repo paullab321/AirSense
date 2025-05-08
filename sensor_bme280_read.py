@@ -3,7 +3,7 @@ import bme280
 import time
 from datetime import datetime
 
-adress = 0x76  # I2C address of the BME280 sensor
+adress = 0x77  # Update to the correct I2C address
 
 # Create an I2C bus object (1 for Raspberry Pi 3 and later)
 bus = smbus2.SMBus(1)
