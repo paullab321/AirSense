@@ -1,16 +1,15 @@
-import smbus2
-import bme280
 import time
 from datetime import datetime
+import board
+import busio
+import adafruit_bme280
 
-adress = 0x77  # Update to the correct I2C address
+# Create I2C bus
+i2c = busio.I2C(board.SCL, board.SDA)
 
-# Create an I2C bus object (1 for Raspberry Pi 3 and later)
-bus = smbus2.SMBus(1)
-calibration_params = bme280.load_calibration_params(
-    bus, adress)  # Load calibration parameters
-
-sensor = bme280.BME280(i2c_dev=bus, address=adress)  # Create a BME280 object
+# Create BME280 object
+bme280 = adafruit_bme280.Adafruit_BME280_I2C(
+    i2c, address=0x77)  # Use the detected address
 
 # Create lists to store historical data
 timestamps = []
@@ -27,10 +26,9 @@ def read_sensor_data():
     global running
     while running:
         # Read sensor data
-        data = sensor.get_data()
-        temperature = data.temperature
-        humidity = data.humidity
-        pressure = data.pressure
+        temperature = bme280.temperature
+        humidity = bme280.humidity
+        pressure = bme280.pressure
 
         # Get the current timestamp
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -43,18 +41,20 @@ def read_sensor_data():
 
         # Print the data to the console
         print(
-            f"Timestamp: {timestamp}, Temperature: {temperature:.2f} °C, Humidity: {humidity:.2f} %, Pressure: {pressure:.2f} hPa")
+            f"Timestamp: {timestamp}, Temperature: {temperature:.2f} °C, Humidity: {humidity:.2f} %, Pressure: {pressure:.2f} hPa"
+        )
 
         # Wait for 1 second before reading again
         time.sleep(1)
 
 
 def save_sensor_data_to_file(filename="sensor_data.txt"):
-    # Save the data to a file when the loop ends on a debian environment
+    # Save the data to a file when the loop ends
     with open(filename, "w") as file:
         for i in range(len(timestamps)):
             file.write(
-                f"{timestamps[i]}, {temperatures[i]:.2f}, {humidities[i]:.2f}, {pressures[i]:.2f}\n")
+                f"{timestamps[i]}, {temperatures[i]:.2f}, {humidities[i]:.2f}, {pressures[i]:.2f}\n"
+            )
     print(f"Data saved to {filename}")
 
 
@@ -65,9 +65,6 @@ if __name__ == "__main__":
         running = False  # Stop the loop when Ctrl+C is pressed
         print("Stopping sensor data collection...")
     finally:
-        bus.close()  # Close the I2C bus when done
-        print("I2C bus closed.")
-
         print("Program terminated.")
 
         # Call the function to save data
