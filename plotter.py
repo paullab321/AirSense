@@ -17,6 +17,7 @@ def plot_sensor_data(data_source):
     def update(frame):
         data = next(data_source, None)
         if data:
+            print(f"Received data: {data}")  # Debug: Print received data
             indices.append(len(indices) + 1)
             if "pm2.5" in data and "pm10" in data:
                 pm25_values.append(data["pm2.5"])
