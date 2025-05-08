@@ -53,7 +53,7 @@ def main():
     start_server_thread()
 
     # Initialize data sources
-    data_source_novaPM = sensor_novaPM_read.read_sds011()
+    data_source_novaPM = sensor_novaPM_read.read_sensor_data()
     data_source_bme280 = sensor_bme280_read.read_sensor_data()
 
     # Process and save sensor data
