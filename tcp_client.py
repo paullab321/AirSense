@@ -1,5 +1,6 @@
 import socket
 import plotter
+import json
 from datetime import datetime
 
 
@@ -16,23 +17,34 @@ def start_client(host='192.168.178.156', port=65432):
 
             try:
                 while True:
-                    data = client_socket.recv(1024)
+                    data = client_socket.recv(1024).decode('utf-8').strip()
                     if not data:
                         break
 
-                    # Parse the received data
-                    decoded_data = data.decode('utf-8').strip()
-                    try:
-                        # Assuming the data format is: "timestamp, PM2.5: value µg/m³, PM10: value µg/m³"
-                        parts = decoded_data.split(", ")
-                        timestamp = datetime.strptime(
-                            parts[0], "%Y-%m-%d %H:%M:%S.%f")
-                        pm25 = float(parts[1].split(": ")[1].split(" ")[0])
-                        pm10 = float(parts[2].split(": ")[1].split(" ")[0])
-
-                        yield {"timestamp": timestamp, "pm2.5": pm25, "pm10": pm10}
-                    except (IndexError, ValueError) as e:
-                        print(f"Failed to parse data: {decoded_data} ({e})")
+                    # Parse the JSON data
+                    for line in data.split("\n"):
+                        if line.strip():
+                            sensor_data = json.loads(line)
+                            print(sensor_data)  # Print the parsed data
+                            try:
+                                timestamp = datetime.strptime(
+                                    sensor_data["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
+                                if sensor_data["sensor"] == "NovaPM":
+                                    yield {
+                                        "timestamp": timestamp,
+                                        "pm2.5": sensor_data["data"]["pm2.5"],
+                                        "pm10": sensor_data["data"]["pm10"]
+                                    }
+                                elif sensor_data["sensor"] == "BME280":
+                                    yield {
+                                        "timestamp": timestamp,
+                                        "temperature": sensor_data["data"]["temperature"],
+                                        "humidity": sensor_data["data"]["humidity"],
+                                        "pressure": sensor_data["data"]["pressure"]
+                                    }
+                            except (KeyError, ValueError) as e:
+                                print(
+                                    f"Failed to parse data: {sensor_data} ({e})")
             except KeyboardInterrupt:
                 print("Client shutting down.")
 

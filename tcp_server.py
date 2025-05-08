@@ -1,5 +1,7 @@
 import socket
+import json  # Use JSON for unified data formatting
 import sensor_novaPM_read
+import sensor_bme280_read
 
 
 def start_server(host='0.0.0.0', port=65432):
@@ -17,10 +19,44 @@ def start_server(host='0.0.0.0', port=65432):
         print(f"Connection established with {addr}")
 
         try:
-            for data in sensor_novaPM_read.read_sds011():
-                # Send sensor data as a string
-                message = f"{data['timestamp']}, PM2.5: {data['pm2.5']} µg/m³, PM10: {data['pm10']} µg/m³\n"
-                conn.sendall(message.encode('utf-8'))
+            # Initialize data sources
+            data_source_novaPM = sensor_novaPM_read.read_sensor_data()
+            data_source_bme280 = sensor_bme280_read.read_sensor_data()
+
+            while True:
+                # Collect and send NovaPM data
+                try:
+                    nova_data = next(data_source_novaPM)
+                    unified_nova_data = {
+                        "timestamp": nova_data["timestamp"],
+                        "sensor": "NovaPM",
+                        "data": {
+                            "pm2.5": nova_data["pm2.5"],
+                            "pm10": nova_data["pm10"]
+                        }
+                    }
+                    conn.sendall(
+                        (json.dumps(unified_nova_data) + "\n").encode('utf-8'))
+                except StopIteration:
+                    print("NovaPM sensor data exhausted.")
+
+                # Collect and send BME280 data
+                try:
+                    bme_data = next(data_source_bme280)
+                    unified_bme_data = {
+                        "timestamp": bme_data["timestamp"],
+                        "sensor": "BME280",
+                        "data": {
+                            "temperature": bme_data["temperature"],
+                            "humidity": bme_data["humidity"],
+                            "pressure": bme_data["pressure"]
+                        }
+                    }
+                    conn.sendall(
+                        (json.dumps(unified_bme_data) + "\n").encode('utf-8'))
+                except StopIteration:
+                    print("BME280 sensor data exhausted.")
+
         except BrokenPipeError:
             print("Client disconnected.")
         except KeyboardInterrupt:

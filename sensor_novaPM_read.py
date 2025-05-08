@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 
 
-def read_sds011():
+def read_sensor_data():
     # Initialize the serial connection
     ser = serial.Serial('/dev/ttyUSB0', baudrate=9600, timeout=2)
 
