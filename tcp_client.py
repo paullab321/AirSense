@@ -27,8 +27,8 @@ def start_client(host='192.168.178.156', port=65432):
                             sensor_data = json.loads(line)
                             print(sensor_data)  # Print the parsed data
                             try:
-                                timestamp = datetime.strptime(
-                                    sensor_data["timestamp"], "%Y-%m-%d %H:%M:%S.%f")
+                                timestamp = datetime.fromisoformat(
+                                    sensor_data["timestamp"])
                                 if sensor_data["sensor"] == "NovaPM":
                                     yield {
                                         "timestamp": timestamp,

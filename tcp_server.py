@@ -47,7 +47,7 @@ def start_server(host='0.0.0.0', port=65432):
                 try:
                     bme_data = next(data_source_bme280)
                     unified_bme_data = {
-                        "timestamp": bme_data["timestamp"] if isinstance(bme_data["timestamp"], str) else bme_data["timestamp"].isoformat(),
+                        "timestamp": bme_data["timestamp"].isoformat() if hasattr(bme_data["timestamp"], "isoformat") else bme_data["timestamp"],
                         "sensor": "BME280",
                         "data": {
                             "temperature": bme_data["temperature"],
