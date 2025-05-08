@@ -1,30 +1,74 @@
-import sys  # Unused import, consider removing if not needed
-import board  # Ensure the 'board' module is installed
-import busio  # Ensure the 'busio' module is installed
+import smbus2
+import bme280
+import time
+from datetime import datetime
 
-i2c = busio.I2C(board.SCL, board.SDA)
+adress = 0x76  # I2C address of the BME280 sensor
 
-try:
-    if not i2c.try_lock():
-        raise RuntimeError("Unable to lock the I2C bus.")
-    print(f"Found I2C devices: {[hex(i) for i in i2c.scan()]}")
-finally:
-    i2c.unlock()
+# Create an I2C bus object (1 for Raspberry Pi 3 and later)
+bus = smbus2.SMBus(1)
+calibration_params = bme280.load_calibration_params(
+    bus, adress)  # Load calibration parameters
 
-bme280 = 0x76  # Replace with the actual I2C address of your BME280 sensor
+sensor = bme280.BME280(i2c_dev=bus, address=adress)  # Create a BME280 object
 
-if not bme280 in i2c.scan():
-    raise RuntimeError(f"BME280 sensor not found at address {hex(bme280)}.")
-    sys.exit()
+# Create lists to store historical data
+timestamps = []
+temperatures = []
+humidities = []
+pressures = []
+
+running = True
+
+# Function to read sensor data and store it in lists
 
 
-def get_bme280_id():
-    i2c.writeto(bme280, bytes([0xD0]), stop=False)  # Register address for ID
-    result = bytearray(1)
-    i2c.readfrom_into(bme280, result)
-    print(f"BME280 ID: {result[0]:#04x}")
+def read_sensor_data():
+    global running
+    while running:
+        # Read sensor data
+        data = sensor.get_data()
+        temperature = data.temperature
+        humidity = data.humidity
+        pressure = data.pressure
+
+        # Get the current timestamp
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Append the data to the lists
+        timestamps.append(timestamp)
+        temperatures.append(temperature)
+        humidities.append(humidity)
+        pressures.append(pressure)
+
+        # Print the data to the console
+        print(
+            f"Timestamp: {timestamp}, Temperature: {temperature:.2f} °C, Humidity: {humidity:.2f} %, Pressure: {pressure:.2f} hPa")
+
+        # Wait for 1 second before reading again
+        time.sleep(1)
+
+
+def save_sensor_data_to_file(filename="sensor_data.txt"):
+    # Save the data to a file when the loop ends on a debian environment
+    with open(filename, "w") as file:
+        for i in range(len(timestamps)):
+            file.write(
+                f"{timestamps[i]}, {temperatures[i]:.2f}, {humidities[i]:.2f}, {pressures[i]:.2f}\n")
+    print(f"Data saved to {filename}")
 
 
 if __name__ == "__main__":
-    get_bme280_id()
-    print("BME280 sensor is connected and operational.")
+    try:
+        read_sensor_data()
+    except KeyboardInterrupt:
+        running = False  # Stop the loop when Ctrl+C is pressed
+        print("Stopping sensor data collection...")
+    finally:
+        bus.close()  # Close the I2C bus when done
+        print("I2C bus closed.")
+
+        print("Program terminated.")
+
+        # Call the function to save data
+        save_sensor_data_to_file()
