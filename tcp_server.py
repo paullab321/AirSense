@@ -28,7 +28,8 @@ def start_server(host='0.0.0.0', port=65432):
                 try:
                     nova_data = next(data_source_novaPM)
                     unified_nova_data = {
-                        "timestamp": nova_data["timestamp"],
+                        # Convert datetime to string
+                        "timestamp": nova_data["timestamp"].isoformat(),
                         "sensor": "NovaPM",
                         "data": {
                             "pm2.5": nova_data["pm2.5"],
@@ -38,13 +39,16 @@ def start_server(host='0.0.0.0', port=65432):
                     conn.sendall(
                         (json.dumps(unified_nova_data) + "\n").encode('utf-8'))
                 except StopIteration:
-                    print("NovaPM sensor data exhausted.")
+                    print("NovaPM sensor data source exhausted.")
+                except Exception as e:
+                    print(f"Error reading NovaPM sensor data: {e}")
 
                 # Collect and send BME280 data
                 try:
                     bme_data = next(data_source_bme280)
                     unified_bme_data = {
-                        "timestamp": bme_data["timestamp"],
+                        # Convert datetime to string
+                        "timestamp": bme_data["timestamp"].isoformat(),
                         "sensor": "BME280",
                         "data": {
                             "temperature": bme_data["temperature"],
@@ -55,7 +59,9 @@ def start_server(host='0.0.0.0', port=65432):
                     conn.sendall(
                         (json.dumps(unified_bme_data) + "\n").encode('utf-8'))
                 except StopIteration:
-                    print("BME280 sensor data exhausted.")
+                    print("BME280 sensor data source exhausted.")
+                except Exception as e:
+                    print(f"Error reading BME280 sensor data: {e}")
 
         except BrokenPipeError:
             print("Client disconnected.")
